@@ -12,5 +12,6 @@ This Repo contains: <br>
    - Improved upon Google Scholar scraper developed for a [final project](https://github.com/macs30122-winter24/final-project-aepy)
 #### td_requests_elect_years.ipynb 
    - Code developed to analyze the relationship between government take-down requests and election years
+
 <br>
 - 📫 How to reach me **griffin13@uchicago.edu**
