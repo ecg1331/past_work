@@ -6,7 +6,7 @@ This is an example of some of my past coding work, as detailed on my resume.
 #### Lyrical Evolution Through the Eras
 - This folder contains code developed for a machine-learning project aimed at classifying an artist's text lyric data to corresponding albums.
 - Although this was done for a class project, I continued to work on it after the class ended and made significant improvements to the decision tree and logistic regression models by optimizing the train-test split ratio and continuing to hypertune parameters.
-- [View my final presentation of my original models here!](https://drive.google.com/file/d/1fPmn6hGo1cZZg9i0ix8f2uSX2BnSArHA/view)
+- [View the final presentation of my original models here!](https://drive.google.com/file/d/1fPmn6hGo1cZZg9i0ix8f2uSX2BnSArHA/view)
 
 #### gs_prototype.ipynb
 - Improved upon Google Scholar scraper developed for a [final project](https://github.com/macs30122-winter24/final-project-aepy)
