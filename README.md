@@ -1,6 +1,5 @@
 <h1 align="center">Hi 👋, I'm Emma</h1>
 <h3 align="center">I am currently a Masters student in Computational Social Science at the University of Chicago</h3>
-
 This is an example of some of my past coding work, as detailed on my resume.
 <br>
 This Repo contains: <br>
@@ -14,4 +13,4 @@ This Repo contains: <br>
    - Code developed to analyze the relationship between government take-down requests and election years
 
 <br>
-- 📫 How to reach me **griffin13@uchicago.edu**
+📫 How to reach me **griffin13@uchicago.edu**
