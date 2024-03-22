@@ -9,7 +9,7 @@ This is an example of some of my past coding work, as detailed on my resume.
 - [View the final presentation of my original models here!](https://drive.google.com/file/d/1fPmn6hGo1cZZg9i0ix8f2uSX2BnSArHA/view)
 
 #### gs_prototype.ipynb
-- Improved upon Google Scholar scraper developed for a [final project](https://github.com/macs30122-winter24/final-project-aepy)
+- Improved upon Google Scholar scraper developed for a research project designed to look at the relationship between number of citations and student reviews
 
 #### td_requests_elect_years.ipynb 
 - Code developed to analyze the relationship between government take-down requests and election years
