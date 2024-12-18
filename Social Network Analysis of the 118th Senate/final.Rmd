@@ -1,0 +1,695 @@
+---
+title: "SNA FALL 2024 FINAL: Option 4"
+author: "Emma Griffin"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+---
+
+## Political Polarization within the 118th Senate
+
+In “Political Party Polarization in Congress: A Network Science Approach” researchers operationalize political polarization in Congress through modularity, defining the abstract concept of  polarization as behavioral rather than ideological. (Waugh et al, 1)  To do so, the researchers constructed networks of legislators for each congressional session from the 1st to the 109th for a total of 218 networks. (Waugh et al, 10) In these networks, each node pertains to the individual legislator, while ties between the legislators reflect the level, or strength, of their agreement within the congressional voting session (Waugh et al, 10). Modularity was then calculated to quantify the level of polarization.  According to the researchers, a highly polarized chamber will consist of strong inner-party ties, and weak inter party ties (Waugh et al,, 3), providing a network science backed foundation that helps understand theoretical frameworks surrounding ideology, polarization, and both voter and legislative behavior.
+
+Theoretical perspectives, like those by Anthony Downs in 1957, provide insights into the underlying mechanisms of political polarization. He proposes that the political ideologies within parties have emerged as a way to reduce from the cognitive effort that is required by casting an informed vote, with strict party lines and ideologies majorly simplifying this process. (Waugh et al, 3) Further, he also theorizes that voters tend to seek just enough information to make a decision between parties (notably, he did not say people). (Waugh et al, 5) Consequently, party platforms often consist of vague ideologies rather than complex policy. (Waugh et al, 5) This pattern creates an almost cyclical dynamic, where voter and information fatigue shape the political platform, which influences the behavior of the elected officials, and which in turn, reinforces the voting behavior.
+
+By applying modularity to each congressional network, researchers found that the sessions with moderate modularity (and therefore, moderate polarization) were in fact the most unstable due to a mix of “mix of impetus and relaxed majority cohesion” (Waugh et al, 9). In contrast, chambers with high or low levels of modularity tended to be much more stable, as very little can be done to change the majority opinion (Waugh et al, 9). 
+
+Additionally, researchers analyzed the individual members within the network by creating measures of ‘divisiveness’ (polarized behavior) and ‘solidarity’ (alignment with their respective party) and found that divisiveness has a negative impact for re-election. However, this impact is mitigated if the legislator also shows a high level of solidarity (Waugh et al, 9). In turn, this dynamic reinforces polarization overtime, as offsetting divisiveness with group cohesion will almost certainly deepen the divide between the opposing parties.
+
+The subsequent work will build on the research done by Waugh et al. further exploring the concept of political polarization and modularity within the 118th Senate.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+library(igraph)
+library(sna)
+library(qgraph)
+library(viridis)
+```
+
+**Data:** 
+
+I followed the methodology outlined by Waugh et al to construct my dataset. First, I acquired the complete history of Member Ideology and Congressional Votes for the 118th Senate from Voteview.org (Lewis et al., 2024). Next, I matched the ‘ISPCR’ number from the current Senate votes to those in the  member ideology dataset, creating a biographical dataset of the members of the 118th Senate. 
+
+I then iterated through the Congressional Voting set, creating a list of pairs of senators who voted the same way (‘Yea’ or ‘Nay’) for a proposed measure. I then tallied the frequency of each Senator pair, and used these totals to assign weights to the edges of the voting dataset.
+
+This process can be seen in the file ‘creatingDataset.ipynb’
+
+
+```{r}
+edge_list <- read.csv("~/Desktop/SNAfinal/edge_list.csv")
+str(edge_list)
+```
+
+```{r}
+current_sen <- read.csv("~/Desktop/SNAfinal/current_sen.csv")
+current_sen$name <- current_sen$icpsr
+# only keeping some attributes
+current_sen <- current_sen[, c("name", "bioname", "state_abbrev", "party_code")]
+str(current_sen)
+```   
+
+```{r}
+g <- graph_from_data_frame(d=edge_list, vertices=current_sen, directed=FALSE)
+summary(g)
+```
+
+This process created a final dataset of 103 nodes (50 Democrat, 49 Republican, and 4 Independent Senators) and 5246 edges. It is important to note that there are more than 100 senators within the dataset for two reasons. First, Senator Joe Manchin is included in the data twice, because of his switch from ‘Democrat’ to ‘Independent’ in May of 2024. His ‘Democrat’ and ‘Independent’ voting history will appear separately. Second, it includes the originally elected officials (Sasse, Feinstein, Helmy) and their respective replacements (Ricketts, Butler, and Helmy).
+
+Each node has the attributes: name (ISPCR), bioname(the senators actual name), state abbreviation, and their party code (100 for Democrat, 200 for Republican, and 328 for Independent).
+
+Each edge is assigned a 'weight' attribute that represents the number of times the pair of senators voted the same way on a given bill.
+
+## Senate
+
+**Distribution:**
+ 
+With over 5000 ties, the original network is extremely dense. Because of this, I will be using the distribution of edges to find an appropriate break point, and subsequently remove those edges.	 
+ 
+```{r}
+weights <- E(g)$weight
+summary(weights)
+```
+
+```{r}
+hist(weights, 
+     breaks = 30, 
+     col = 'darkorchid4',
+     main = "Distribution of Edge Weights (Similar Voting Patterns)", 
+     xlab = "Weight")
+```
+To get a better sense of the data and pick a more accurate edge removal point, I created a visualization. The data creates a bimodal histogram, with two obvious peaks around 150 and 600. Notably, there is very little activity within the middle range. This suggests a polarized congressional session, with most senators either strongly aligning or not aligning with another senator's voting behavior.
+
+```{r}
+# setting threshold
+threshold <- quantile(weights, probs = 0.55)
+
+# removing edges
+gT <- delete_edges(g, E(g)[weight <= threshold])
+
+summary(gT)
+```
+
+I chose a threshold of 55%, because I only wanted moderate to strong ties to be measured within the network. By filtering out weaker connections, the network will better reflect the cohesion, or lack thereof, within the session. This filtering provides a final network of 2359 edges.
+
+```{r}
+components_info <- igraph::components(gT)
+sizes <- components_info$csize
+
+sizes
+```
+
+
+```{r}
+smallC <- order(sizes)[1:4]
+
+for (i in smallC) {
+
+  smallC_nodes <- which(components_info$membership == i)
+  subgraph <- induced_subgraph(gT, smallC_nodes)
+  print(V(subgraph)$bioname)
+  print(V(subgraph)$party_code)
+}
+
+```
+After several attempts to visualize the entire network, I decided to look at the components to determine whether a ‘main’ component existed. This revealed an overwhelmingly dominant component of 99 nodes, with 4 separate components consisting of individual senators Laphonza Romanique Butler, Dianne Feinstien, George S. Helmy, and Joe Manchin (as an Indepdendent). This suggests that these 4 senators consistently deviated from the norm of both parties.
+
+Given the size and density of the network, these four nodes will be excluded from subsequent visualizations for clarity.
+
+```{r}
+largest_component <- induced_subgraph(gT, which(components_info$membership == 1))
+
+V(largest_component)$color <- ifelse(V(largest_component)$party_code == 100, "royalblue",
+                     ifelse(V(largest_component)$party_code == 200, "red", "green4"))
+
+E(largest_component)$width <- (E(largest_component)$weight - min(E(largest_component)$weight)) / (max(E(largest_component)$weight) - min(E(largest_component)$weight)) + 1e-6
+
+V(largest_component)$label <- sapply(V(largest_component)$bioname, function(x) {
+  parts <- unlist(strsplit(x, " "))
+  parts <- unlist(strsplit(gsub(",", "", x), " "))
+  paste(parts[1])
+})
+```
+
+Due to the inner-density within the parties, none of the layouts I attempted to use provided any sort of interpretable or meaningful visualization. While it was discussed in class that some larger networks cannot yield clear visualizations, I felt as though being able to visualize the network was imperative for the understanding of polarization and modularity. After considerable effort, I found this post on [stack overflow](https://stackoverflow.com/questions/39290909/igraph-resolving-tight-overlapping-nodes). By adapting this approach, I was finally able to produce a clear visualization. 
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+
+e <- get.edgelist(largest_component, names = FALSE)
+
+layout_q <- qgraph.layout.fruchtermanreingold(
+  e,
+  vcount = vcount(largest_component),
+  area = 8 * (vcount(largest_component)^2),
+  repulse.rad = vcount(largest_component)^3        
+)
+
+par(mar = c(0, 0, 1.2, 0))
+plot(largest_component, 
+     layout = layout_q,
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.label.degree = -pi * 3,
+     vertex.color = V(largest_component)$color,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(gT)$width,
+     edge.color = adjustcolor("grey", alpha.f = 0.3),
+     main = "118th Congressional Senate")
+
+```
+
+From this visualization, it is obvious that this is a polarized network, even without calculating further measures. Additionally, the  main component of the network is weakly connected by two nodes; Collins and Murkowski. By removing these nodes, the network would break down into 2 additional components.
+
+The visualization also shows  a notable difference in the density between the ‘Republican’ and ‘Democrat’ areas, with the democrats having a much higher density. This begins to suggest that Democrats have more inner party cohesion than Republicans.
+
+Lastly, this visualization shows that the Democrats not only hold the physical majority (50 vs 49 vs 4), but with the addition of Collins, Murkowski, and the 3 Independent Senators (King, Sinema, and Sanders) hold the ideological majority.
+
+**Basic Network Measures:**
+
+```{r}
+edge_density(gT)
+```
+
+The density of a graph reflects the interconnectivity of a network. In this context, it represents the overall agreement on measures ('Yea', "Nay') within the Senate. With a density of .449, it appears as though showing there is moderate (45%) agreement within the network.
+
+However, looking at this solely at this measure may oversimplify the story. The visualization of the network showed evidence of strong polarization, which leads me to believe that this density measure is deceptively high and is reflecting the amount of inner party agreement.
+
+**Degree Centrality:** 
+
+Next, I chose to look at degree centrality within the network. This will show how many times a Senator voted similarly to another Senator (over the set threshold). 
+
+```{r}
+degree_centrality <- igraph::degree(gT)
+names(degree_centrality) <- V(gT)$bioname
+dc <- head(sort(degree_centrality, decreasing = TRUE))
+
+knitr::kable(
+  dc,
+  caption = "Highest Senate Degree Centrality"
+)
+```
+
+```{r}
+lowDc <- head(sort(degree_centrality, decreasing = FALSE))
+knitr::kable(
+  lowDc,
+  caption = "Lowest Senate Degree Centrality"
+)
+```
+Unsurprisingly, Susan Collins, who connected the ‘Republican’ and ‘Democrat’ networks has the highest degree of centrality, aligning with 56 other Senators, seemingly across party lines. This suggests significant bipartisanship, as her connections likely span across party lines. 
+
+Notably absent from this is Murkowski, who also appeared to connect the two components of the network. This suggests that Collins may play an even more significant role in bridging the two parties than originally assumed.
+
+The remaining senators, excluding Sinema, who is technically an independent (and therefore, almost always crossing party lines) also show high degrees of centrality, but their connections seem to be primary within their respective parties. This reinforces the polarization we saw within in the visualization.
+
+**Party Degree Centrality:**
+```{r}
+print(table(V(gT)[degree_centrality > 50]$party_code))
+print(table(V(gT)[degree_centrality > 49]$party_code))
+```
+
+To further explore this idea of party cohesion, I analyzed degree centrality within the two parties (50 for democrats, 49 for Republicans). Although this doesn’t guarantee that these connections stayed within the party, because the visualization showed no cross party connections besides Collins and Murkowski, I felt as though this was an appropriate starting point to see party cohesion.
+
+The Democratic party seems to have around 72% (36 members out of 50) alignment on voting patterns, with an additional 2 independent Senators and Collins. In contrast, the Republican party shows a much lower level of cohesion, with only 2% (2 out of 49) Senators having consistent alignment.
+
+**Betweenness:**
+```{r}
+betweenness <- igraph::betweenness(gT, directed = FALSE, weights = E(gT)$weight, normalized = TRUE)
+names(betweenness) <- V(gT)$bioname
+
+sen_betweeness <- sort(betweenness, decreasing = TRUE)[1:10]
+
+knitr::kable(
+  sen_betweeness,
+  caption = "Senate Betweenness"
+)
+```
+Betweenness Centrality in this network shows how often a Senator has acted as a ‘bridge’ between other senators. Murkowski has the highest score (.383) and from the visualization we know that she serves as a bridge between the parties. She is followed by Romeny, who has a score of .257. 
+
+The remaining scores are notably low, exemplified by Graham appearing in the 'top 10' with a betweenness score of .004. This suggests not only polarization amongst the parties, but perhaps within the parties. 
+
+```{r}
+lc_bet <- igraph::betweenness(largest_component, directed = FALSE, weights = E(gT)$weight, normalized = TRUE)
+V(largest_component)$betweenness <- lc_bet + .5 
+# Since the betweenness scores are so low, I had to add .5, as adding epsilon was not enough
+```
+
+```{r, fig.width=7, fig.height=6}
+par(mar = c(0, 0, 1.2, 0))
+plot(largest_component, 
+     layout = layout_q,
+     vertex.size = V(largest_component)$betweenness * 8,
+     vertex.label.cex = .5,
+     vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     vertex.color = V(largest_component)$color,
+     asp = 0,
+     edge.width = E(gT)$width,
+     edge.color = adjustcolor("grey", alpha.f = 0.3),
+     main = "118th Congressional Senate Betweenness Centrality")
+```
+
+This plot highlights the low betweenness scores within the network. The only immediately visible change in node size (which is determined by the betweenness score) in Murkowski, and to a lesser extent, Romney. 
+
+From this visualization, we can see that there is only one democrat who appeared in the highest betweenness score calculator (Manchin) while the rest are all Republicans. This supports the idea that the Republican party is less cohesive overall, as Republican Senators are more frequently having to ‘bridge’ connections within the party.
+
+**Assortativity:** 
+
+```{r}
+assortativity(gT, V(gT)$party_code, directed = FALSE)
+```
+
+This assortativity measures shows tendency for Senators to connect with others from their party. Because assortativity is measured from -1 to 1, a score of .49 shows a moderately high level of assortativity. However, it also shows that party lines are not an absolute rule, and that there is bipartisan agreement within certain measures entering the Senate. It would be interesting to see how this measure changed if I removed the measures that received an overwhelming (bipartisan) majority.
+
+**Modularity:**
+
+I will be using the Leiden algorithm, due to the size the network.
+
+```{r}
+set.seed(13)
+com = cluster_leiden(gT, objective_function = "modularity")
+modularity(gT, membership(com))
+```
+
+```{r}
+print(sizes(com))
+```
+
+
+```{r}
+small_communities <- which(membership(com) %in% c(3, 4, 5, 6))
+
+data.frame(
+  Senator = V(gT)[small_communities]$bioname,
+  Party = V(gT)[small_communities]$party_code
+)
+
+```
+
+Because the community detection algorithm primarily identifies the same members as those in the 'largest component', I will again be using the largest component for visualization.
+
+```{r}
+set.seed(13)
+com = cluster_leiden(largest_component, objective_function = "modularity")
+modularity(largest_component, membership(com))
+```
+     
+```{r, fig.width=7, fig.height=6}
+par(mar = c(0, 0, 1.2, 0))
+plot(
+    largest_component, 
+    layout = layout_q,
+    vertex.size = 7,
+    vertex.label.cex = .5,
+    vertex.label.degree = -pi * 3,
+    vertex.label.dist = .50,
+    vertex.label.font = 2,
+    vertex.label.color = "black",
+    vertex.color = V(largest_component)$color,
+    asp = 0,
+    edge.width = E(gT)$width,
+    edge.color = adjustcolor("grey", alpha.f = 0.5),
+    mark.groups = communities(com),
+    main = "118th Congressional Senate Community Detection"
+)
+
+```
+
+With a modularity score of .486, there is an (unsurprisingly) moderately strong community structure within the network. This no doubt corresponds to the party lines. It is notable to mention that modularity for the 108th Senate (2003 - 2005) had a modularity score of .273 and was regarded as one of the highest scores of modularity. (Shai et al., 2020)
+
+Further, a score of .486 suggests that this level of moderate level modularity, and as shown in Waugh, polarity, creates an unstable Senate. (Waugh et al., 9)
+
+## Republican
+
+Now, I will be looking at the network of Republican Senators. 
+
+```{r}
+republican_vertices <- V(g)[party_code == 200]
+
+gT_r <- igraph::induced_subgraph(g, vids = republican_vertices)
+
+summary(gT_r)
+```
+
+```{r}
+Rweights <- E(gT_r)$weight
+
+summary(Rweights)
+```
+
+```{r}
+hist(Rweights,
+     breaks = 30,
+     col = 'red',
+     main = 'Distribution of Republican Votes',
+     xlab = 'Weight')
+```
+In order to properly establish a threshold for the Republican Senator network, I recalculated the distribution of weights in order to establish an appropriate threshold. Here, it is obvious that their threshold differs immensely from the complete network, and that this was a necessary step.
+
+Unsurprisingly, the Republican party has a much higher (482.1 vs. 323.4) and median (498 vs. 249) than the bipartisan network, showing that there is much higher degree of agreement within the party. Additionally, there is a much higher minimum score (214 vs. 2) which shows that there is far less deviation from the expected voting pattern within in Senate.
+
+
+```{r}
+rThreshold <- quantile(Rweights, probs=.55)
+rThreshold
+
+R <- delete_edges(gT_r, E(gT_r)[weight < rThreshold])
+summary(R)
+```
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+
+E(R)$width <- (E(R)$weight - min(E(R)$weight)) / (max(E(R)$weight) - min(E(R)$weight)) + 1e-6
+
+V(R)$label <- sapply(V(R)$bioname, function(x) {
+  parts <- unlist(strsplit(x, " "))
+  parts <- unlist(strsplit(gsub(",", "", x), " "))
+  paste(parts[1])})
+  
+e <- get.edgelist(R, names = FALSE)
+
+layout_q <- qgraph.layout.fruchtermanreingold(
+  e,
+  vcount = vcount(R),
+  area = 8 * (vcount(R)^2),
+  repulse.rad = vcount(R)^3        
+)
+
+par(mar = c(0, 0, 1.2, 0))
+plot(R, 
+     layout = layout_q,
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.color = 'red',
+      vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(R)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.5),
+     main = "Innerparty Voting Patterns (Republican)")
+
+```
+
+When given a separate threshold, the voting patterns within the Republican senate continue to reveal unique party dynamics. From this plot, we can see that the main component of the Senators holds the majority, and within that component, there is a dense core. This apparent density suggests that Senators within this core exhibit  strong similar voting patterns, while those on the periphery also align with patterns to a lesser extent.
+
+As expected, Murkowski and Collins (previously grouped with the Democrats when examining the entire network) appear to have a strong tie connecting them suggesting similar voting patterns between the two. Their exclusion from the main component of the network shows that they deviate from the overall voting norm. Further, Graham is very weakly tied to Collins. This was in interesting observation, as Collins is known for being a moderate Republican (as observed within the bipartisan network) and Graham is not.
+
+There are 2 isolated senator nodes (Scott and Vance) which suggests that each of these Senators has their own unique voting pattern. It is notable to point out that when looking at the entire network (with a threshold of 387), all of these Senators were connected to the Republican component. Becoming disconnected with an increased threshold (504) might suggest that these senators have rather ‘extreme’ views within the Republican party, and could in turn, have a more ‘decisive’ (Waugh et al, 9) role. 
+
+## Democrats
+
+In the Democratic network, I included the Independent senators due to the fact that they were grouped with the Democrats in the bipartisan network.
+
+```{r}
+dem_vertices <- V(g)[party_code %in% c(100, 328)]
+
+g_dem <- induced_subgraph(g, vids = dem_vertices)
+
+summary(g_dem)
+```
+
+```{r}
+Dweights <- E(g_dem)$weight
+summary(Dweights)
+```
+
+
+```{r}
+hist(Dweights,
+     breaks = 30,
+     col = 'royalblue',
+     main = 'Distribution of Democrat and Independent Votes',
+     xlab = 'Weight')
+
+```
+
+The Democratic Senators have a very interesting distribution. Overall, there is a much higher level of cohesion amongst the group, as reflected by the first quartile starting at 575 and the median being 605. Both of these measures are approximately 100 votes greater than the Republican Senators, beginning to highlight stronger alignment.
+
+However, this network also has a number of extreme outliers in the lower half of the graph (weights < 100), representing a number senators who are frequently deviating from the group norm. Further, the the range of voting alignment is 5 - 645. This extreme level of deviation is not present within the Republican network, prompting the question of who is truly the more cohesive network.
+
+```{r}
+dT <- quantile(Dweights, prob = .55)
+D <- delete_edges(g_dem, E(g_dem)[weight < dT])
+summary(D)
+```
+
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+
+V(D)$color <- ifelse(V(D)$party_code == 100, "royalblue","green4")
+
+E(D)$width <- (E(D)$weight - min(E(D)$weight)) / (max(E(D)$weight) - min(E(D)$weight)) + 1e-6
+
+V(D)$label <- sapply(V(D)$bioname, function(x) {
+  parts <- unlist(strsplit(x, " "))
+  parts <- unlist(strsplit(gsub(",", "", x), " "))
+  paste(parts[1])})
+  
+eD <- get.edgelist(D, names = FALSE)
+
+layout_qD <- qgraph.layout.fruchtermanreingold(
+  eD,
+  vcount = vcount(D),
+  area = 8 * (vcount(D)^2),
+  repulse.rad = vcount(D)^3        
+)
+
+par(mar = c(0, 0, 1.2, 0))
+plot(D, 
+     layout = layout_qD,
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.color = V(D)$color,
+      vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(D)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.4),
+     main = "Innerparty Voting Patterns (Democrats)")
+
+```
+The Democratic network, much like the Republican network, is made up of a densely packed center core. Those connected to the main component seem to be connected with stronger ties than the Republicans, including those on the peripheral. However, much like what was observed in the distribution, there are a much greater number of outliers (10) than we saw in the Republican (2) or the bipartisan (3) network. 
+
+It is worth mentioning that the Democrat network, because of their stronger alignment on voting pattern, had a much higher threshold than the two later networks. However, even with this in mind, there still seems to be significant ideological differences within the Democratic party itself.
+
+**Edge Density:**
+```{r}
+Dedge_density <- edge_density(D)
+Redge_density <- edge_density(R)
+
+edge_density_df <- data.frame(
+  Measure = "Edge Density",
+  Democrats = Dedge_density,
+  Republicans = Redge_density)
+
+knitr::kable(
+  edge_density_df,
+  caption = "Edge Density for Democrats and Republicans"
+)
+```
+
+The results of the density measure comparison produced interesting results. When looking at the entire, bipartisan network (using the bipartisan threshold) the Democrat voting coalition appeared noticeably denser than their Republican counterparts. 
+
+However, when each party’s network was analyzed based on their inner-party voting weights (55%), the results flipped. Now, we see that the Democratic network is ever so slightly less dense than the Republican. This suggests that although Democrats may have a more moderate agreement overall and in turn, more moderate connections, Republicans have stronger connections overall, producing what appears to be the first signs of a more cohesive party. This was also obvious when comparing the inner-party voting pattern plots.
+
+**Degree Centrality:**
+```{r}
+degree_centralityD <- igraph::degree(D)
+names(degree_centralityD) <- V(D)$bioname
+d_top_degree <- sort(degree_centralityD, decreasing = TRUE)[1:10]
+
+
+Rdegree_centrality <- igraph::degree(R)
+names(Rdegree_centrality) <- V(R)$bioname
+rTop_degree <- sort(Rdegree_centrality, decreasing = TRUE)[1:10]
+```
+
+```{r}
+top_degree_df <- data.frame(
+  Democrats = names(d_top_degree),      
+  Degree_Dem = as.numeric(d_top_degree),
+  Republicans = names(rTop_degree),
+  Degree_Rep = as.numeric(rTop_degree)
+)
+
+knitr::kable(
+  top_degree_df,
+  caption = "Top Degree Centrality for Democrats and Republicans"
+)
+```
+
+The degree centrality for both parties appears to have a rather similar range. Further, both have similar scores frequencies appearing (39 for Democrats, 39 and 37 for Republicans) which both show that these members frequently align with others in the party, and could be key predictors for the passing of certain measures.
+
+Further, it is worth noting that this inner party analysis produced very different results than the bipartisan analysis. None of the senators with a high bipartisan degree centrality appear within this party analysis. This suggests that there was much more (weaker) bipartisan activity than I originally assumed.
+
+**Betweenness:**
+```{r}
+betweennessD <- igraph::betweenness(D, directed = FALSE, weights = E(D)$weight, normalized = TRUE)
+names(betweennessD) <- V(D)$bioname
+betweennessD <- sort(betweennessD, decreasing = TRUE)[1:10]
+betweennessD <- round(betweennessD, 3)
+
+Rbetweenness <- igraph::betweenness(R, directed = FALSE, weights = E(R)$weight, normalized = TRUE)
+names(Rbetweenness) <- V(R)$bioname
+Rbetweenness <- sort(Rbetweenness, decreasing = TRUE)[1:10]
+Rbetweenness <- round(Rbetweenness, 3)
+```
+
+```{r}
+between_df <- data.frame(
+  Between_Dem = betweennessD,
+  Republicans = names(Rbetweenness),
+  Between_Rep = Rbetweenness
+)
+
+knitr::kable(
+  between_df,
+  caption = "Top Betweenness Centrality for Democrats and Republicans"
+)
+```
+
+Again, we are seeing very different results to the bipartisan network, suggesting that those in the bipartisan network play a crucial role in bridging the two parties.
+
+Notably, the most central figure in bridging the Democratic network (Welch) has a much lower betweenness score than his Republican opposite (Lummis). This, along with a lower density score and the numerous outliers observed in the plot, give credence to the idea that the Democratic network is decentralized and may not rely on a single ‘bridge’ to connect the networks. This is apparent looking at the range of betweenness scores on both sides, with the Republicans seeming to be more reliant on the top members.
+
+Conversely, the lower betweenness scores on the Democratic side could also indicate that the network is so fragmented that it struggles to maintain any sort of cohesion amongst the separate groups. 
+
+**Largest Clique:**
+
+```{r}
+lcR <- largest.cliques(R)
+lcD <- largest.cliques(D)
+
+lcR
+
+lcD
+```
+
+Both networks produce 4 different 'largest cliques', with each clique only having 1 different node. I will be plotting the first clique for both networks.
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+op <- par(mfrow = c(1, 1), mar = c(2, 0, 2, 0))
+
+plot(induced_subgraph(R, lcR[[1]]),
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.color = 'red',
+      vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(R)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.4),
+     main = "Largest Clique (Republican)")
+
+
+plot(induced_subgraph(D, lcD[[1]]),
+     vertex.size = 8,
+     vertex.label.cex = .6,
+     vertex.color = 'royalblue',
+      vertex.label.degree = -pi * 2,
+     vertex.label.dist = .70,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(R)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.4),
+     main = "Largest Clique (Democrat)")
+
+par(op)
+```
+Both of these cliques seem to produce the ‘core’ that we saw in both inner party voting pattern plots. The Democratic clique is larger and denser, in both the amount and strength of ties. Looking at this measure alone, one might assume that because of these cliques, the Democrats would have a much easier time accomplishing their legislative goal. 
+
+However, because we have further analysis, we know that the Democratic party seems to have inner ideological differences that the Republican party does appear to have, at least to the same extent. So, even though this clique appears to be stronger than the Republican counterpart, the internal differences within the party may undermine the ability to leverage the power of this clique effectively. 
+
+Looking at the modularity within each network will give more insight into this observation.
+
+**Modularity:**
+
+```{r}
+set.seed(13)
+Rcom <- cluster_leiden(R, objective_function = "modularity")
+Rmod <- modularity(R, membership(Rcom))
+
+Rmod
+sizes(Rcom)
+```
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+par(mar = c(0, 0, 1.2, 0))
+plot(R, 
+     layout = layout_q,
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.color = 'red',
+      vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(R)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.5),
+     mark.groups = communities(Rcom),
+     main = "Modularity (Republican)")
+  
+
+```
+
+```{r}
+set.seed(13)
+comD <- cluster_leiden(D, objective_function = "modularity")
+modularity(D, membership(comD))
+
+sizes(comD)
+```
+
+```{r, fig.width=7, fig.height=6}
+set.seed(13)
+par(mar = c(0, 0, 1.2, 0))
+plot(D, 
+     layout = layout_qD,
+     vertex.size = 7,
+     vertex.label.cex = .5,
+     vertex.color = V(D)$color,
+     vertex.label.degree = -pi * 3,
+     vertex.label.dist = .50,
+     vertex.label.font = 2,
+     vertex.label.color = "black",
+     asp = 0,
+     edge.width = E(R)$width * 3,
+     edge.color = adjustcolor("grey", alpha.f = 0.5),
+     mark.groups = communities(comD),
+     main = "Modularity (Democrats)")
+
+```
+
+Both networks have rather low modularity scores, especially when comparing to the bipartisan analysis, which produced a modularity score of .488. This shows that while the party lines within the Senate are rigid and easily identifiable, the inner party alliances are much less distinct. 
+
+The community detection within modularity further highlights earlier observations about the differences in cohesion within the parties. While Republicans had 2 distinct communities and only 2-3 ‘outliers’, the Democratic party had 11 isolated groups, and their 3 distinct communities appear to be fractured, even within the previously detected clique. (It is important to note that the addition of the Independent senators into ths Democratic analysis attributes to some of the observed fragmentation) 
+
+This reinforces earlier observations of the Republican party having greater ideological alignment and an overall stronger sense of cohesion. Although Democrats tend to vote similarly when analyzing the bipartisan network, by isolating the party, we can see that there are numerous internal divisions. This, in turn, could make passing ‘Democratic’ legislation much harder, as even though they hold the ideological majority, there is very little agreement within the party.
+
+However, this observed fragmentation or lack of ideological alignment could also stem from the fact that Democrats know that they hold an ideological majority. There is not as much pressure for them to present a unified front, as they can afford some deviation from group norms while still passing Democratic legislation. Conversely, Republicans might feel more pressure to conform as they are the minority voice. 
+
+It will be interesting to see whether these dynamics change during the next Senate session, with Democrats possibly showing a greater party cohesion, as Republicans will hold a (slim) majority. Future research could explore this idea further after the 119th Senate commences.
+
+**Works Cited:**
+
+  Lewis, Jeffrey B., Keith Poole, Howard Rosenthal, Adam Boche, Aaron Rudkin, and Luke Sonnet (2024). Voteview: Congressional Roll-Call Votes Database. https://voteview.com/
+
+  Shai, S., Stanley, N., Granell, C., Taylor, D., & Mucha, P. J. (2020). Case studies in network community detection. arXiv.org. https://arxiv.org/abs/1705.02305
+  
+  Waugh, A. S., Pei, L., Fowler, J. H., Mucha, P. J., & Porter, M. A. (2011). Party polarization in Congress: A network science approach. arXiv. https://arxiv.org/abs/0907.3509
