@@ -1,3 +1,9 @@
+## About Me
+
+I’m Emma, a second-year master’s student in Computational Social Science at the University of Chicago. My work focuses on using computational methods to explore complex social issues, combining data-driven approaches with theoretical insights to uncover meaningful patterns and solutions that bridge and go beyond traditional boundaries of computer science and social science.
+
+This curated GitHub highlights my interdisciplinary approach and creativity, reflecting my ability to tackle problems with both innovation and a socially conscious perspective.
+
 ## Featured Projects
 
 - **[Social Network Analysis of Senate Voting Patterns](https://github.com/ecg1331/past_work/tree/main/Social%20Network%20Analysis%20of%20the%20118th%20Senate)**  
