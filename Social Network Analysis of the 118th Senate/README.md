@@ -1,6 +1,6 @@
 # Social Network Analysis of Senate Voting Patterns
 
-This repository contains my final project for **Social Network Analysis (Fall 2024)**. The project explores political polarization within the 118th U.S. Senate through a network analysis of voting patterns.
+The project explores political polarization within the 118th U.S. Senate through a network analysis of voting patterns.
 
 ## Project Overview
 - Constructed a weighted network of 103 senators using voting records from Voteview.org.
