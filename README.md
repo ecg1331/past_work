@@ -11,7 +11,7 @@ Explored thematic and stylistic evolution in an artist's musical catalog using m
   Collaborated with partner Olivia Werba to design and implement a relational database to optimize workflows for a café and bookstore, including menu management, sales tracking, and customer loyalty programs.  
   [View the project here](https://github.com/ecg1331/db_autumn2024/tree/main)
 
--**`Jumpin JB:`** Reimagined the Asteroids base code from [Professor Adam Gerber](https://github.com/agerber/asteroids_java) into an original 2D platformer, developing custom game mechanics, interactive environments, and optimized gameplay using object-oriented programming principles.
+-**`Jumpin JB:`** [Reimagined the Asteroids base code from Professor Adam Gerber](https://github.com/agerber/asteroids_java) into an original 2D platformer, developing custom game mechanics, interactive environments, and optimized gameplay using object-oriented programming principles. [View the project here] (https://github.com/ecg1331/past_work/tree/main/Jumpin%20JB)
 
 - **Analyzing Online Abortion Discourse (Large-Scale, Preliminary Research)**  
   Investigated shifts in abortion discourse using large-scale online datasets and NLP techniques to analyze public opinion and thematic trends.  
