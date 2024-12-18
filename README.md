@@ -8,7 +8,7 @@ Explored thematic and stylistic evolution in an artist's musical catalog using m
 [View the project here](https://github.com/ecg1331/past_work/tree/main/Lyrical%20Evolution%20Through%20the%20Eras)
 
 - **'HP COFFEE' (SQL Database Design and Implementation)**  
-  Designed and implemented a relational database to optimize workflows for a café and bookstore, including menu management, sales tracking, and customer loyalty programs.  
+  Collaborated with partner Olivia Werba to design and implement a relational database to optimize workflows for a café and bookstore, including menu management, sales tracking, and customer loyalty programs.  
   [View the project here](https://github.com/ecg1331/db_autumn2024/tree/main)
 
 - **Analyzing Online Abortion Discourse (Large-Scale, Preliminary Research)**  
