@@ -11,3 +11,7 @@ This project explores the thematic evolution of an artist's musical catalog over
   - **Logistic Regression**
   - **Truncated SVD**
 - Created visualizations to interpret patterns in lyrical evolution and model performance.
+
+[Click here to view the final presentation of the original models!](https://drive.google.com/file/d/1fPmn6hGo1cZZg9i0ix8f2uSX2BnSArHA/view)  
+*Note: This presentation showcases the original models and findings from the class project. The current repository includes updates and improvements, such as enhanced Decision Tree and Logistic Regression models, as well as the addition of Random Forests.*
+
