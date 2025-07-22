@@ -1,6 +1,6 @@
 ## About Me
 
-I’m Emma, a second-year master’s student in Computational Social Science at the University of Chicago. My work focuses on using computational methods to explore complex social issues, combining data-driven approaches with theoretical insights to uncover meaningful patterns and solutions that bridge and go beyond traditional boundaries of computer science and social science.
+I’m Emma. I recently received my Master's in Computational Social Science at the University of Chicago. My work focuses on using computational methods to explore complex social issues, combining data-driven approaches with theoretical insights to uncover meaningful patterns and solutions that bridge and go beyond traditional boundaries of computer science and social science.
 
 This curated GitHub highlights my interdisciplinary approach and creativity, reflecting my ability to tackle problems with both innovation and a socially conscious perspective.
 
